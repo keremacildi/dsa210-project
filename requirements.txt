@@ -1,8 +1,7 @@
 pandas
 numpy
-matplotlib
-seaborn
-scikit-learn
-xgboost
-plotly
 requests
+meteostat
+matplotlib
+scipy
+jupyter
