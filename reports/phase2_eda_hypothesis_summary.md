@@ -38,35 +38,35 @@ From the summary statistics (`df.describe()`):
 
 - **PM2.5**  
   - Count: 170  
-  - Mean: `[PM25_MEAN]` µg/m³  
-  - Median: `[PM25_MEDIAN]` µg/m³  
-  - Min: `[PM25_MIN]` µg/m³  
-  - Max: `[PM25_MAX]` µg/m³  
+  - Mean: 11.21 µg/m³  
+  - Median: 7.35 µg/m³  
+  - Min: 2.17 µg/m³  
+  - Max: 189.99 µg/m³  
 
   The histogram of `pm25` shows a right-skewed distribution, with most days at relatively moderate concentrations and a small number of high-pollution days.
 
 - **Temperature (`temp_mean`)**  
-  - Mean: `[TEMP_MEAN]` °C  
-  - Range: `[TEMP_MIN]` to `[TEMP_MAX]` °C  
+  - Mean: 15.24 °C  
+  - Range: –8.0 to 25.9 °C  
 
   Values follow a seasonal pattern, with lower temperatures in winter months and higher in summer.
 
 - **Wind speed (`wind_speed_mean`)**  
-  - Mean: `[WIND_MEAN]` m/s  
-  - Range: `[WIND_MIN]` to `[WIND_MAX]` m/s  
+  - Mean: 2.99 m/s  
+  - Range: 1.22 to 10.86 m/s  
 
 - **Precipitation (`precip_mm`)**  
   - Most days have low or zero precipitation, with occasional heavy-rain days producing the right tail of the distribution.
 
 - **Traffic volume (`traffic_volume`)**  
-  - Mean: `[TRAFFIC_MEAN]`  
-  - Range: `[TRAFFIC_MIN]` to `[TRAFFIC_MAX]`  
+  - Mean: 25,047  
+  - Range: 1,512 to 187,381  
 
 The time series plot of `pm25` over 2023 shows day-to-day variability with some higher peaks, especially in certain periods, but no extreme outliers beyond generally plausible urban background levels.
 
 ### 2.2 Bivariate patterns
 
-- A scatter plot of `pm25` vs `traffic_volume` indicates `[describe visually: weak/clear/no obvious]` association by eye.  
+- A scatter plot of `pm25` vs `traffic_volume` indicates no obvious association by eye.  
 - The correlation matrix across `pm25`, `temp_mean`, `wind_speed_mean`, `precip_mm`, and `traffic_volume` confirms that correlations between predictors are not extreme (no absolute correlations close to 1), so multicollinearity is not severe at this stage.
 
 ---
@@ -89,24 +89,17 @@ Because `humidity_mean` is entirely missing, the analysis uses:
 - `wind_speed_mean`
 - `precip_mm`
 
-Pearson correlation tests (from the notebook):
+Pearson correlation tests:
 
-- Temp_mean: r = `[R_TEMP]`, p = `[P_TEMP]`, n = `[N_TEMP]`  
-- Wind_speed_mean: r = `[R_WIND]`, p = `[P_WIND]`, n = `[N_WIND]`  
-- Precip_mm: r = `[R_PRECIP]`, p = `[P_PRECIP]`, n = `[N_PRECIP]`  
+- Temp_mean: r = 0.213, p = 0.0052, n = 170  
+- Wind_speed_mean: r = –0.220, p = 0.0040, n = 170  
+- Precip_mm: r = –0.041, p = 0.596, n = 170  
 
 Interpretation:
 
-- For variables with **p < 0.05**, reject H0 and conclude there is statistically significant evidence of a linear relationship with PM2.5.  
-- For variables with **p ≥ 0.05**, do not reject H0; evidence for a linear relationship is not strong at the 5% level.
-
-Summarize in words according to your actual numbers. Example structure:
-
-- Temperature shows `[no / a weak / a moderate]` `[positive/negative]` correlation with PM2.5 (r = …, p = …), so `[we / we do not]` reject H0.  
-- Wind speed shows `[no / some]` evidence that higher wind is associated with `[lower / higher]` PM2.5, depending on the sign and significance.  
-- Precipitation similarly shows `[describe]` relationship.
-
-If you computed Spearman correlations as a robustness check, you can add a short sentence noting whether they qualitatively agree with the Pearson results.
+- Temperature shows a weak positive correlation with PM2.5 and the relationship is statistically significant at the 5% level, so H0 is rejected.  
+- Wind speed shows a weak negative correlation with PM2.5 and the relationship is statistically significant, indicating higher wind speeds are associated with lower PM2.5 levels.  
+- Precipitation does not show a statistically significant linear relationship with PM2.5 at the 5% level, so H0 is not rejected for precipitation.
 
 ---
 
@@ -120,26 +113,21 @@ Are daily PM2.5 levels significantly different on days with higher traffic volum
 - H0: Mean daily PM2.5 on high-traffic days equals mean daily PM2.5 on low-traffic days.  
 - H1: Mean daily PM2.5 on high-traffic days is different from that on low-traffic days.
 
-The variable `traffic_level` splits the days by the median `traffic_volume` into `high` and `low`. From the notebook:
+The variable `traffic_level` splits the days by the median `traffic_volume` into `high` and `low`.
 
-- Number of high-traffic days: `[N_HIGH]`  
-- Number of low-traffic days: `[N_LOW]`  
-- High-traffic mean PM2.5: `[HIGH_MEAN]` µg/m³  
-- Low-traffic mean PM2.5: `[LOW_MEAN]` µg/m³  
+- Number of high-traffic days: 85  
+- Number of low-traffic days: 85  
+- High-traffic mean PM2.5: 11.36 µg/m³  
+- Low-traffic mean PM2.5: 11.06 µg/m³  
 
 Statistical tests:
 
-- Welch t-test: p = `[P_T_H2]`  
-- Mann–Whitney U test: p = `[P_U_H2]`  
+- Welch t-test: p = 0.882  
+- Mann–Whitney U test: p = 0.734  
 
 Interpretation:
 
-- If the primary test (e.g., Welch t-test) yields p < 0.05, reject H0 and conclude that average PM2.5 is significantly different on high-traffic days compared to low-traffic days.  
-- If p ≥ 0.05, do not reject H0; the data does not provide strong evidence of a difference in average PM2.5 between high and low traffic days.
-
-Summarize according to your actual values, e.g.:
-
-> In this dataset, high-traffic days have mean PM2.5 of `[HIGH_MEAN]` µg/m³ versus `[LOW_MEAN]` µg/m³ on low-traffic days. The t-test p-value of `[P_T_H2]` indicates `[no significant / a statistically significant]` difference at the 5% level.
+The p-values from both tests are well above 0.05. Therefore, H0 is not rejected, and the data does not provide strong evidence of a difference in average PM2.5 between high-traffic and low-traffic days.
 
 ---
 
@@ -153,21 +141,19 @@ Do daily PM2.5 levels differ between weekdays and weekends?
 - H0: Mean daily PM2.5 on weekdays equals mean daily PM2.5 on weekends.  
 - H1: Mean daily PM2.5 on weekdays differs from that on weekends.
 
-From the notebook:
+From the analysis:
 
-- Weekday mean PM2.5: **11.60 µg/m³** (Weekday mean: 11.602831085817929)  
-- Weekend mean PM2.5: **10.21 µg/m³** (Weekend mean: 10.208876320494019)  
+- Weekday mean PM2.5: 11.60 µg/m³  
+- Weekend mean PM2.5: 10.21 µg/m³  
 
 Statistical tests:
 
-- Welch t-test: p = **0.5115**  
-- Mann–Whitney U test: p = **0.762**  
+- Welch t-test: p = 0.5115  
+- Mann–Whitney U test: p = 0.762  
 
 Interpretation:
 
-- Both tests give p-values well above 0.05.  
-- Therefore, do not reject H0.  
-- The observed difference in means (~1.4 µg/m³ higher on weekdays) is small relative to the day-to-day variability and is not statistically significant at the 5% level.
+Both tests yield p-values greater than 0.05. Therefore, H0 is not rejected. Although weekdays show a slightly higher average PM2.5 concentration, the difference is not statistically significant at the 5% level.
 
 ---
 
@@ -175,8 +161,8 @@ Interpretation:
 
 - The dataset combines EPA PM2.5, Meteostat weather data, and NYC traffic counts into a clean daily panel of 170 days for NYC in 2023.  
 - PM2.5 values are within a plausible urban range, with some higher-pollution days but no extreme outliers.  
-- Weather variables (temperature, wind, precipitation) show `[insert qualitative summary based on your H1 results: e.g., weak correlations, moderate negative correlation with wind, etc.]` with PM2.5; humidity could not be analyzed due to missing data.  
-- Comparing high vs low traffic days (H2) yields `[insert conclusion based on your p-values: e.g., no statistically significant difference / a significant difference]` in average PM2.5.  
-- Comparing weekdays to weekends (H3) shows a slightly higher mean PM2.5 on weekdays, but the difference is not statistically significant (t-test p = 0.5115, Mann–Whitney p = 0.762), so the data does not support a strong weekend effect in this year.
+- Weather variables show weak relationships with PM2.5: temperature is weakly positively correlated, wind speed is weakly negatively correlated, and precipitation shows no significant relationship.  
+- Comparing high vs low traffic days does not reveal a statistically significant difference in average PM2.5 levels.  
+- Comparing weekdays to weekends shows slightly higher PM2.5 on weekdays, but the difference is not statistically significant.
 
-This completes the Phase 2 requirements: data collection, cleaning, exploratory analysis, and hypothesis testing aligned with the original research questions and hypotheses.
+This completes the Phase 2 requirements for exploratory data analysis and hypothesis testing.
