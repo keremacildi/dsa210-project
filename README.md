@@ -1,104 +1,106 @@
-# PROJECT PROPOSAL  
-## Predicting Urban PM2.5 Using Weather and Traffic Data
+# DSA 210 Project – Air Pollution in New York City
 
-### Motivation
-
-Air pollution is a major environmental and public health problem. Fine particulate matter (PM2.5) is particularly harmful because it can penetrate deep into the lungs and bloodstream. Predicting PM2.5 can help cities reduce exposure risks and plan traffic or industrial regulations.
-
-This project aims to analyze the relationship between weather, traffic, and air pollution levels in a single urban area and to build a machine learning model that predicts daily PM2.5 (and, as an extension, air quality index – AQI) from environmental variables.
-
-For concreteness, the initial focus is on New York City over a single full year (2023), using only open data.
+## Project Overview
+This project analyzes the relationship between **PM2.5 air pollution**, **traffic intensity**, and **weather conditions** in New York City using publicly available datasets. The goal is to understand temporal patterns and contributing factors to air pollution and to apply machine learning methods to predict daily PM2.5 levels.
 
 ---
 
-### Research Questions
-
-1. **Weather–Pollution Relationship**  
-   How do daily weather conditions (temperature, humidity, wind speed, and precipitation) relate to daily average PM2.5 levels in New York City?
-
-2. **Traffic–Pollution Relationship**  
-   Are daily PM2.5 levels significantly different on days with higher traffic volume compared to days with lower traffic volume?
-
-3. **Temporal Patterns**  
-   Do daily PM2.5 levels differ systematically between weekdays and weekends, and are there meaningful seasonal differences (e.g., winter vs. summer)?
+## Research Questions
+1. How does traffic volume relate to PM2.5 air pollution levels in New York City?
+2. How do weather variables (temperature, wind speed, precipitation) affect PM2.5 concentrations?
+3. Are there clear temporal patterns (seasonal or weekly) in PM2.5 levels?
+4. Can daily PM2.5 concentrations be predicted from traffic and weather data using machine learning models?
 
 ---
 
-### Hypotheses
+## Datasets
+- **Air Quality (PM2.5):** EPA Air Quality System daily summary data  
+- **Traffic:** NYC Open Data traffic volume dataset  
+- **Weather:** Historical daily weather data retrieved via API for NYC  
 
-These hypotheses will be tested in the exploratory data analysis and hypothesis testing phase.
-
-- **H1 – Weather vs PM2.5 (Correlation)**  
-  - H0: There is no linear relationship between daily average PM2.5 and each weather variable (temperature, wind speed, precipitation, humidity).  
-  - H1: At least one weather variable has a non-zero linear relationship with daily average PM2.5.
-
-- **H2 – High vs Low Traffic Days (Group Comparison)**  
-  - H0: Mean daily PM2.5 on “high-traffic” days equals mean daily PM2.5 on “low-traffic” days.  
-  - H1: Mean daily PM2.5 on “high-traffic” days is different from mean daily PM2.5 on “low-traffic” days.
-
-- **H3 – Weekday vs Weekend (Group Comparison)**  
-  - H0: Mean daily PM2.5 on weekdays equals mean daily PM2.5 on weekends.  
-  - H1: Mean daily PM2.5 on weekdays differs from that on weekends.
-
-Additional hypotheses (e.g. seasonal effects) may be added later if data supports them.
+All datasets are aggregated to **daily resolution** and aligned at the **city level**.
 
 ---
 
-### Data Sources (actual implementation)
+## Spatial Assumptions and Justification
+For air quality data, records were filtered to `State Name = New York` and `City Name = New York` in the EPA PM2.5 dataset. This selection is used as a proxy for New York City because EPA monitoring stations labeled under the city of New York are located within the NYC metropolitan boundary and are commonly used to represent city-level air quality.
 
-1. **Air Quality Data (PM2.5)**  
-   - Daily PM2.5 data from United States Environmental Protection Agency (EPA) — the pre-generated “daily_88101_2023.zip” dataset covering particulate matter (code 88101).  
-   - Target variable: daily average PM2.5 for New York City (city-wide mean of available monitoring stations).
+The traffic dataset is sourced from NYC Open Data and contains only traffic observations collected within New York City administrative boundaries. Since the dataset is published and maintained by NYC authorities, all observation segments are assumed to spatially correspond to NYC road infrastructure, making it appropriate for city-wide aggregation.
 
-2. **Weather Data**  
-   - Daily weather data (temperature, wind speed, precipitation, humidity if available) from Meteostat.  
-   - Derived features: daily mean temperature (“temp_mean”), daily mean wind speed (“wind_speed_mean”), daily total precipitation (“precip_mm”), and humidity when available.
+Weather data is retrieved using a single latitude–longitude point corresponding to central New York City (40.7128, −74.0060). Given NYC’s relatively small geographic area and limited intra-city daily weather variation, a single representative location is sufficient for capturing city-wide weather patterns relevant to air pollution analysis.
 
-3. **Traffic Data (for enrichment)**  
-   - Traffic volume counts from New York City Department of Transportation (NYC DOT) dataset “Automated Traffic Volume Counts”, accessed via public NYC Open Data API.  
-   - Features: total daily traffic volume aggregated over all observation segments in 2023.
-
-These sources are open-access and reproducible; all scripts to download and process them are included in the project repository.
+All datasets are therefore spatially aligned at the city level and aggregated to daily resolution before merging on the date variable.
 
 ---
 
-### Data Collection Plan (actual implementation)
+## Methodology
+1. **Data Collection & Cleaning**
+   - Downloaded raw datasets from official sources.
+   - Filtered, cleaned, and aggregated data to daily city-level values.
+   - Merged datasets on the date variable.
 
-The data collection pipeline is implemented in `src/collect_data.py` (also reproducible in `notebooks/01_data_collection.ipynb`). The steps are:
+2. **Exploratory Data Analysis & Hypothesis Testing**
+   - Visualized temporal trends and distributions.
+   - Analyzed correlations between PM2.5, traffic, and weather variables.
+   - Conducted statistical tests to evaluate hypothesized relationships.
 
-1. Download and extract the EPA daily PM2.5 ZIP for 2023.  
-2. Filter for New York City stations.  
-3. Compute city-wide daily mean PM2.5 → save to `data/raw/openaq_nyc_2023.csv`.  
-4. Download daily weather for NYC from Meteostat for 2023 → transform to daily means/totals → save as `data/raw/weather_nyc_2023.csv`.  
-5. Fetch raw traffic volume counts from NYC DOT via the public API → convert timestamps to dates, sum volume per date → save to `data/raw/traffic_nyc_2023.csv`.  
-6. Merge the three daily datasets on `date`, discard invalid or extreme values, and engineer additional variables:  
-   - `weekday` (0–6),  
-   - `is_weekend` (boolean),  
-   - `traffic_level` (“high” vs “low” by median traffic volume).  
-   Save merged dataset to `data/processed/nyc_air_weather_traffic_2023_daily.csv`.  
-
-This pipeline ensures a clean daily-level panel dataset suitable for EDA, hypothesis testing, and later modeling.
-
----
-
-### Planned Analysis (after Phase 2)
-
-- **Exploratory Data Analysis (EDA)**: distributions, time-series plots, correlation matrix, scatter plots.  
-- **Hypothesis Testing**: correlation tests (H1), two-sample tests (H2, H3).  
-- **Prediction / Machine Learning**: baseline linear model + potential non-linear models (if time permits) to predict daily PM2.5 from weather + traffic features.  
-- **Visualization & Reporting**: time-series, boxplots, summary report, optional interactive dashboard.
+3. **Machine Learning Modeling**
+   - Defined a regression task with daily PM2.5 as the target variable.
+   - Used time-based train/test splits to avoid data leakage.
+   - Built a baseline model and multiple advanced models.
+   - Evaluated models using MAE, RMSE, and R² metrics.
 
 ---
 
-### Tools and Libraries
+## Phase 3 – Machine Learning Summary
+The machine learning task focuses on predicting **daily PM2.5 concentrations** using traffic volume and weather variables. A baseline dummy regressor was compared against several models, including Ridge, Lasso, Random Forest, and Gradient Boosting. The best-performing model was a **tuned Random Forest**, achieving approximately **MAE ≈ 3.42**, **RMSE ≈ 4.38**, and **R² ≈ 0.28** on the test set. Results indicate that traffic intensity and certain weather variables contribute meaningfully to PM2.5 prediction, though a substantial portion of variance remains unexplained, reflecting the complexity of air pollution dynamics.
 
-The project uses:
+---
 
-- `pandas`, `numpy` for data handling.  
-- `requests` for HTTP downloads.  
-- `meteostat` for weather retrieval.  
-- `matplotlib` for plotting.  
-- `scipy` for statistical tests.  
-- `jupyter` for interactive notebooks.
+## Reproducibility
 
-All dependencies are listed in `requirements.txt`.  
+All results in this project can be reproduced by following the steps below.
+
+### Environment setup
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+````
+
+### Execution order
+
+Run the notebooks in the following order:
+
+1. `notebooks/01_data_collection_cleaning.ipynb`
+   Downloads raw datasets, cleans them, and produces the final merged dataset.
+
+2. `notebooks/02_eda_hypothesis_testing.ipynb`
+   Performs exploratory data analysis and statistical hypothesis testing.
+
+3. `notebooks/03_ml_modeling.ipynb`
+   Trains baseline and advanced machine learning models, evaluates performance, and reports final results.
+
+All notebooks are self-contained and can be run sequentially without manual intervention once dependencies are installed.
+
+---
+
+## Repository Structure
+
+```
+.
+├── notebooks/
+│   ├── 01_data_collection_cleaning.ipynb
+│   ├── 02_eda_hypothesis_testing.ipynb
+│   └── 03_ml_modeling.ipynb
+├── reports/
+│   └── phase2_eda_hypothesis_summary.md
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## Notes
+
+This project was completed as part of **DSA 210**. All code is written in Python, and all analyses are fully reproducible using the instructions above.
