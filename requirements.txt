@@ -5,3 +5,4 @@ meteostat
 matplotlib
 scipy
 jupyter
+scikit-learn
